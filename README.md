@@ -41,14 +41,14 @@ optional arguments:
 3. Generate author embeddings using contexts.
 ```
 $ python3.6 embedding.py -h
-usage: embedding.py [-h] -c CONTEXT [-m MODEL] [-d DIMENSION] [-w WINDOW_SIZE]
-                    [-t NUM_THREADS]
+usage: embedding.py [-h] -f CONTEXT_FILE [-m MODEL] [-d DIMENSION]
+                    [-w WINDOW_SIZE] [-t NUM_THREADS]
 
 Generate author embeddings.
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c CONTEXT, --context CONTEXT
+  -f CONTEXT_FILE, --context_file CONTEXT_FILE
                         Context file(REQUIRED, default: None)
   -m MODEL, --model MODEL
                         Model used for generating vectors. 
