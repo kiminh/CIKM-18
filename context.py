@@ -99,7 +99,7 @@ def generate_contexts(combine, similarity, alpha):
 		contexts += context + '\n'
 
 	if combine == 'alpha':
-		context_file = open('contexts/context_' + combine + '_' + similarity + '_' + alpha + '.txt','w')
+		context_file = open('contexts/context_' + combine + '_' + similarity + '_' + str(alpha) + '.txt','w')
 	else:
 		context_file = open('contexts/context_' + combine + '_' + similarity + '.txt','w')
 

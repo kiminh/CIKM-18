@@ -17,7 +17,8 @@ def generate_embeddings(context_file, sg, dimension, window, threads):
 
 	print('Generating word vectors...')
 	model = Word2Vec(contexts, sg=sg, size=dimension, window=window, workers=threads)
-	model_fname = 'embeddings/model_' + str(sg) + '_' + str(dimension) + '_' + str(window) + '.bin' 
+	info = context_file[context_file.rfind("context_") + 8: context_file.rfind(".txt")]
+	model_fname = 'embeddings/model_' + info + '_' + str(sg) + '_' + str(dimension) + '_' + str(window) + '.bin' 
 	model.save(model_fname)
 
 
@@ -36,4 +37,4 @@ if __name__ == '__main__':
 	args = parser.parse_args()
 
 	generate_embeddings(context_file=args.context_file, sg=args.model, dimension=args.dimension, window=args.window_size,
-			    threads=args.num_threads)
+					    threads=args.num_threads)

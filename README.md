@@ -38,6 +38,7 @@ optional arguments:
                         Value between 0 and 1. (default: 0.5)
 
 ```
+
 3. Generate author embeddings using contexts.
 ```
 $ python3.6 embedding.py -h
@@ -61,11 +62,44 @@ optional arguments:
                         Number of threads used for generating contexts(default: 42)
 ```
 
+4. Compute cosine similarities of authors in test data.
+```
+$ python3.6 compute_cs.py -h
+usage: compute_cs.py [-h] -f MODEL_FILE [-t NUM_THREADS]
+
+Compute cosine similarities of edges in test data. File as saved in the folder
+"test_scores".
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f MODEL_FILE, --model_file MODEL_FILE
+                        File containing author embeddings(REQUIRED)
+  -t NUM_THREADS, --num_threads NUM_THREADS
+                        Number of threads used for parallelization(default:
+                        44)
+
+```
+
 ## Example
 
-To generate author embeddings using similarity measure as resource allocation and combination rule as sum, run the following commands:
+1. Compute APA and ACA matrices using resource allocation as simlarity.
 ```
 $ python3.6 matrices.py -s ra
+```
+
+2. Generate contexts using 'sum' combination strategy.
+``` 
 $ python3.6 context.py -c sum -s ra
+```
+
+3. Generate vector embeddings for authors using the contexts generating in previous step.
+```
 $ python3.6 embedding.py -f contexts/context_sum_ra.txt
 ```
+
+4. Compute cosine similarities of author nodes in test data.
+```
+$ python3.6 compute_cs.py -f embeddings/model_sum_ra_0_100_5.bin
+```
+
+Test data with cosine similarity scores are in 'test_scores'.
