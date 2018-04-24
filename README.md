@@ -5,7 +5,7 @@ Steps to generate author embeddings:
 1. Create ACA and APA matrices:
 ```
 $ python3.6 matrices.py -h
-usage: matrices.py [-h] [-s SIMILARITY]
+usage: matrices.py [-h] [-s SIMILARITY] [-w WEIGHTED]
 
 Generate APA and ACA matrices using given similarity measure.
 
@@ -17,12 +17,14 @@ optional arguments:
                         jc - Jaccard Coefficient 
                         aa - Adamic-Adar 
                         ra - Resource Allocation. (default: cn)
-
+  -w WEIGHTED, --weighted WEIGHTED
+                        Whether to have weighted similarity scores. (default: False)
 ```
+
 2. Generate author contexts using ACA and APA matrices:
 ```
 $ python3.6 context.py -h
-usage: context.py [-h] [-c COMBINE] [-s SIMILARITY] [-a ALPHA]
+usage: context.py [-h] [-c COMBINE] [-s SIMILARITY] [-w WEIGHTED] [-a ALPHA]
 
 Generate contexts from ACA and/or APA matrices.
 
@@ -32,11 +34,12 @@ optional arguments:
                         Combination of similarity scores from APA and ACA matrices. Choose among aca,apa,sum,alpha. (default: aca)
   -s SIMILARITY, --similarity SIMILARITY
                         Similarity measure between author nodes. Choose among cn,jc,aa,ra. (default: cn)
+  -w WEIGHTED, --weighted WEIGHTED
+                        Whether to have weighted similarity scores. (default: False)
   -a ALPHA, --alpha ALPHA
                         Alpha value used in conjunction with alpha combination rule. 
                         similarity = alpha * ACA + (1 - alpha) * APA 
                         Value between 0 and 1. (default: 0.5)
-
 ```
 
 3. Generate author embeddings using contexts.
@@ -77,29 +80,28 @@ optional arguments:
   -t NUM_THREADS, --num_threads NUM_THREADS
                         Number of threads used for parallelization(default:
                         44)
-
 ```
 
 ## Example
 
-1. Compute APA and ACA matrices using resource allocation as simlarity.
+1. Compute unweighted APA and ACA matrices using resource allocation as simlarity.
 ```
-$ python3.6 matrices.py -s ra
+$ python3.6 matrices.py -s ra -w False
 ```
 
 2. Generate contexts using 'sum' combination strategy.
 ``` 
-$ python3.6 context.py -c sum -s ra
+$ python3.6 context.py -c sum -s ra -w False
 ```
 
 3. Generate vector embeddings for authors using the contexts generating in previous step.
 ```
-$ python3.6 embedding.py -f contexts/context_sum_ra.txt
+$ python3.6 embedding.py -f contexts/context_sum_ra_False.txt
 ```
 
 4. Compute cosine similarities of author nodes in test data.
 ```
-$ python3.6 compute_cs.py -f embeddings/model_sum_ra_0_100_5.bin
+$ python3.6 compute_cs.py -f embeddings/model_sum_ra_False_0_100_5.bin
 ```
 
 Test data with cosine similarity scores are in 'test_scores'.

@@ -132,7 +132,7 @@ def resource_allocation(g, a, b):
 	return sum([1/g.degree(v) for v in common_neighbors])
 
 
-def create_matrices(similarity):
+def create_matrices(similarity, weighted):
 	global Gp,Gc,Ap,Ac
 	
 	# Number of authors
@@ -149,12 +149,18 @@ def create_matrices(similarity):
 		# Common Neighbour
 		if similarity == 'cn':
 			for author_,w in author_neighbours.items():
-				Ap[author][author_] = w
+				w_ = 1
+				if weighted:
+					w_ = w
+				Ap[author][author_] = w_
 
 		# Jaccard Coefficient
 		elif similarity == 'jc':
 			for author_,w in author_neighbours.items():
-				Ap[author][author_] = jaccard_coefficient(Gp, author, author_, w)
+				w_ = 1
+				if weighted:
+					w_ = w
+				Ap[author][author_] = jaccard_coefficient(Gp, author, author_, w_)
 
 		# Adamic-Adar
 		elif similarity == 'aa':
@@ -169,7 +175,7 @@ def create_matrices(similarity):
 		else:
 			raise Exception('Invalid similarity measure: ', similarity)
 
-	pickle.dump(Ap, open('data/apa_' + similarity + '.pkl','wb'))
+	pickle.dump(Ap, open('matrices/apa_' + similarity + '_' + weighted + '.pkl','wb'))
 
 	print('Creating ACA matrix..')
 	for author in tqdm(A, ncols=100):
@@ -179,12 +185,18 @@ def create_matrices(similarity):
 		# Common Neighbour
 		if similarity == 'cn':
 			for author_,w in author_neighbours.items():
-				Ac[author][author_] = w
+				w_ = 1
+				if weighted:
+					w_ = w
+				Ac[author][author_] = w_
 
 		# Jaccard Coefficient
 		elif similarity == 'jc':
 			for author_,w in author_neighbours.items():
-				Ac[author][author_] = jaccard_coefficient(Gc, author, author_, w)
+				w_ = 1
+				if weighted:
+					w_ = w
+				Ac[author][author_] = jaccard_coefficient(Gc, author, author_, w_)
 
 		# Adamic-Adar
 		elif similarity == 'aa':
@@ -199,7 +211,7 @@ def create_matrices(similarity):
 		else:
 			raise Exception('Invalid similarity measure: ', similarity)
 
-	pickle.dump(Ap, open('data/aca_' + similarity + '.pkl','wb'))
+	pickle.dump(Ap, open('matrices/aca_' + similarity + '_' + weighted + '.pkl','wb'))
 
 
 
@@ -208,11 +220,13 @@ if __name__ == "__main__":
 									 formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-s','--similarity', dest='similarity', default='cn',
 			    help='Similarity measure between author nodes. Choose among following: \ncn - Common neighbour \njc - Jaccard Coefficient \naa - Adamic-Adar \nra - Resource Allocation. (default: cn)')
-
+	parser.add_argument('-w','--weighted', dest='weighted', default=False,
+			    help='Whether to have weighted similarity scores. (default: False)')
+	
 	args = parser.parse_args()
 
 	# Create APA and ACA graphs
 	create_graphs()
 
 	# Create APA and ACA matrices
-	create_matrices(similarity=args.similarity)
+	create_matrices(similarity=args.similarity, weighted=bool(args.weighted))

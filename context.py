@@ -8,9 +8,9 @@ from argparse import RawTextHelpFormatter
 SCALE = 100
 
 # Generate contexts from ACA and/or APA matrices
-def generate_contexts(combine, similarity, alpha):
-	Ap = pickle.load(open('data/apa_' + similarity + '.pkl','rb'))
-	Ac = pickle.load(open('data/aca_' + similarity + '.pkl','rb'))
+def generate_contexts(combine, similarity, weighted, alpha):
+	Ap = pickle.load(open('matrices/apa_' + similarity + '_' + weighted + '.pkl','rb'))
+	Ac = pickle.load(open('matrices/aca_' + similarity + '_' + weighted + '.pkl','rb'))
 
 	# String to hold the entire context
 	contexts = ''
@@ -27,12 +27,14 @@ def generate_contexts(combine, similarity, alpha):
 			
 			if similarity == 'cn':
 				for author_, w in author_neighbours.items():
-					context += (author + ' ' + author_) * w + ' '
+					if w > 0:
+						context += (author + ' ' + author_ + ' ') * w
 
 			elif similarity in ['jc', 'aa', 'ra']:
 				for author_, w in author_neighbours.items():
 					w_= math.ceil(w * SCALE)
-					context += (author + ' ' + author_) * w_ + ' '
+					if w_ > 0:
+						context += (author + ' ' + author_ + ' ') * w_
 			else:
 				raise Exception('Invalid similarity measure: ', similarity)
 
@@ -41,12 +43,14 @@ def generate_contexts(combine, similarity, alpha):
 
 			if similarity == 'cn':
 				for author_, w in author_neighbours.items():
-					context += (author + ' ' + author_) * w + ' '
+					if w > 0:
+						context += (author + ' ' + author_ + ' ') * w
 
 			elif similarity in ['jc', 'aa', 'ra']:
 				for author_, w in author_neighbours.items():
 					w_= math.ceil(w * SCALE)
-					context += (author + ' ' + author_) * w_ + ' '
+					if w_ > 0:
+						context += (author + ' ' + author_ + ' ') * w_
 			else:
 				raise Exception('Invalid similarity measure: ', similarity)
 		
@@ -59,7 +63,8 @@ def generate_contexts(combine, similarity, alpha):
 					w_ = w
 					if author_ in author_neighbours_p:
 						w_ += author_neighbours_p[author_]
-					context += (author + ' ' + author_) * w_ + ' '
+					if w_ > 0:
+						context += (author + ' ' + author_ + ' ') * w_
 
 			elif similarity in ['jc', 'aa', 'ra']:
 				for author_, w in author_neighbours_c.items():
@@ -67,7 +72,8 @@ def generate_contexts(combine, similarity, alpha):
 					if author_ in author_neighbours_p:
 						w_ += author_neighbours_p[author_]
 					w_= math.ceil(w * SCALE)
-					context += (author + ' ' + author_) * w_ + ' '
+					if w_ > 0:
+						context += (author + ' ' + author_ + ' ') * w_
 			else:
 				raise Exception('Invalid similarity measure: ', similarity)
 		
@@ -81,7 +87,8 @@ def generate_contexts(combine, similarity, alpha):
 					if author_ in author_neighbours_p:
 						w_ += (1 - alpha) * author_neighbours_p[author_]
 					w_= math.ceil(w * SCALE)
-					context += (author + ' ' + author_) * w_ + ' '
+					if w_ > 0:
+						context += (author + ' ' + author_ + ' ') * w_
 
 			elif similarity in ['jc', 'aa', 'ra']:
 				for author_, w in author_neighbours_c.items():
@@ -89,7 +96,8 @@ def generate_contexts(combine, similarity, alpha):
 					if author_ in author_neighbours_p:
 						w_ += (1 - alpha) * author_neighbours_p[author_]
 					w_= math.ceil(w * SCALE)
-					context += (author + ' ' + author_) * w_ + ' '
+					if w_ > 0:
+						context += (author + ' ' + author_ + ' ') * w_
 			else:
 				raise Exception('Invalid similarity measure: ', similarity)
 
@@ -99,10 +107,11 @@ def generate_contexts(combine, similarity, alpha):
 		contexts += context + '\n'
 
 	if combine == 'alpha':
-		context_file = open('contexts/context_' + combine + '_' + similarity + '_' + str(alpha) + '.txt','w')
+		context_file = open('contexts/context_' + combine + '_' + similarity + '_' + str(weighted) + '_' + str(alpha) + '.txt','w')
 	else:
-		context_file = open('contexts/context_' + combine + '_' + similarity + '.txt','w')
+		context_file = open('contexts/context_' + combine + '_' + similarity + '_' + str(weighted) + '.txt','w')
 
+	print('Saving to ', context_file.name)
 	context_file.write(contexts)
 
 
@@ -113,10 +122,12 @@ if __name__ == "__main__":
 			    help='Combination of similarity scores from APA and ACA matrices. Choose among aca,apa,sum,alpha. (default: aca)')
 	parser.add_argument('-s','--similarity', dest='similarity', default='cn',
 			    help='Similarity measure between author nodes. Choose among cn,jc,aa,ra. (default: cn)')
+	parser.add_argument('-w','--weighted', dest='weighted', default=False,
+			    help='Whether to have weighted similarity scores. (default: False)')
 	parser.add_argument('-a','--alpha', dest='alpha', default='0.5',
 			    help='Alpha value used in conjunction with alpha combination rule. \nsimilarity = alpha * ACA + (1 - alpha) * APA \nValue between 0 and 1. (default: 0.5)')
 
 	args = parser.parse_args()
 
 	# Generate contexts
-	generate_contexts(combine=args.combine, similarity=args.similarity, alpha=float(args.alpha))
+	generate_contexts(combine=args.combine, similarity=args.similarity, weighted=args.weighted, alpha=float(args.alpha))
