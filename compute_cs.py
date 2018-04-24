@@ -45,7 +45,7 @@ def compute_similarities(model_file, num_threads):
 		for z in author_edges_scores:
 			scores += z[0] + ' ' + z[1] + ' ' + str(z[2]) + '\n'
 
-		filename = 'scores_' + model_file[model_file.rfind('model_') + 6: model_file.rfind('.bin')] + test_file[4:]
+		filename = 'test_scores/scores_' + model_file[model_file.rfind('model_') + 6: model_file.rfind('.bin')] + test_file[4:]
 		os.makedirs(os.path.dirname(filename), exist_ok=True)
 		with open(filename, 'w') as f:
 			f.write(scores)
