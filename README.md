@@ -104,4 +104,4 @@ $ python3.6 embedding.py -f contexts/context_sum_ra_False.txt
 $ python3.6 compute_cs.py -f embeddings/model_sum_ra_False_0_100_5.bin
 ```
 
-Test data with cosine similarity scores are in 'test_scores'.
+Test data with cosine similarity scores will be saved in a folder named: 'scores_sum_ra_False_0_100_5'.
