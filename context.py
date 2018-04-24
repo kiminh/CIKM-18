@@ -7,12 +7,10 @@ from argparse import RawTextHelpFormatter
 
 SCALE = 100
 
-# Generate contexts from APA and/or ACA graphs
+# Generate contexts from ACA and/or APA matrices
 def generate_contexts(combine, similarity, alpha):
 	Ap = pickle.load(open('data/apa_' + similarity + '.pkl','rb'))
 	Ac = pickle.load(open('data/aca_' + similarity + '.pkl','rb'))
-
-	context_file = open('contexts/context_' + combine + '_' + similarity + '.txt','w')
 
 	# String to hold the entire context
 	contexts = ''
@@ -100,11 +98,16 @@ def generate_contexts(combine, similarity, alpha):
 
 		contexts += context + '\n'
 
+	if combine == 'alpha':
+		context_file = open('contexts/context_' + combine + '_' + similarity + '_' + alpha + '.txt','w')
+	else:
+		context_file = open('contexts/context_' + combine + '_' + similarity + '.txt','w')
+
 	context_file.write(contexts)
 
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser(description='Generate contexts from ACA and/or ACA matrices.',
+	parser = argparse.ArgumentParser(description='Generate contexts from ACA and/or APA matrices.',
 									 formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-c','--combine', dest='combine', default='aca',
 			    help='Combination of similarity scores from APA and ACA matrices. Choose among aca,apa,sum,alpha. (default: aca)')
