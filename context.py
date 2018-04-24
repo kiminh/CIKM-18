@@ -1,239 +1,119 @@
-import csv
 import math
 import pickle
 import argparse
 
-import numpy as np
-import networkx as nx
-
 from tqdm import tqdm
-from gensim.models import Word2Vec
+from argparse import RawTextHelpFormatter
 
-from variables import *
+SCALE = 100
 
+# Generate contexts from APA and/or ACA graphs
+def generate_contexts(combine, similarity, alpha):
+	Ap = pickle.load(open('data/apa_' + similarity + '.pkl','rb'))
+	Ac = pickle.load(open('data/aca_' + similarity + '.pkl','rb'))
 
-DATA_FILE = 'data/train_non_clique.csv'
+	context_file = open('contexts/context_' + combine + '_' + similarity + '.txt','w')
 
-
-# Not author, paper or conference
-def irrelevant(first_node, second_node):
-	prefixes = ('f', 'top')
-	return (first_node.startswith(prefixes) or second_node.startswith(prefixes))
-
-
-def create_graphs():
-	global A,P,C,Gp,Gc,Ap,Ac
-
-	reader = csv.reader(open(DATA_FILE), delimiter='\t')
-
-	# Author -> Papers 
-	AP = {}
-
-	# Paper -> Conferences 
-	PC = {}
-
-	print('Reading data file: ' + DATA_FILE + '...')
-
-	for row in reader:
-		node1, node2 = row[0], row[1]
-		if irrelevant(node1, node2):
-			continue
-		
-		if 	node2.startswith('a'):
-			if node2 not in AP:
-				AP[node2] = set()
-			AP[node2].add(node1)
-
-		elif node2.startswith('c'):
-			if node1 not in PC:
-				PC[node1] = set()
-			PC[node1].add(node2)
-
-		else:
-			raise Exception('Received: ' + node1 + '_' + node2 + '\nSecond node must of type "author" or "conference"')
-
-	# Author -> Conferences
-	AC = {}
-	max_papers, max_conf = -1,-1
-	for author,papers in AP.items():
-		AC[author] = set()
-		for paper in papers:
-			for conferences in PC[paper]:
-				AC[author].add(conferences)
-		# Compute maximum no. of papers and conferences by an author
-		max_papers = max(max_papers, len(papers))
-		max_conf   = max(max_conf, len(AC[author]))
-
-
-	print('Maximum no. of papers/conferences for an author: ' + str(max_papers) + '/' + str(max_conf))
-
-	A = [author for author,papers in AP.items()]
-	P = [paper for paper,conferences in PC.items()]
-
-	C_ = set()
-	for paper,conference in PC.items():
-		C_.add(list(conference)[0])
-	
-	C = list(C_)
-
-	print('Generating author-paper and author-conference graphs...')
-
-	# Initialise Graphs	
-	Gp = nx.Graph()
-	Gc = nx.Graph()
-
-	Gp.add_nodes_from(A)
-	Gp.add_nodes_from(P)
-
-	for author,papers in AP.items():
-		for paper in list(papers):
-			Gp.add_edge(author,paper)
-	
-	Gc.add_nodes_from(A)
-	Gc.add_nodes_from(C)
-
-	for author,conferences in AC.items():
-		for conference in list(conferences):
-			Gc.add_edge(author,conference)
-
-
-def DFSUtil(graph, visited, v, depth, limit, neighbors):
-	visited[v] = True
-	if depth == limit:
-		neighbors[v] = 1
-		return
-
-	for u in graph.neighbors(v):
-		if u in neighbors and depth == limit-1:
-			neighbors[u] += 1
-			continue
-		if u not in visited:
-			DFSUtil(graph, visited, u, depth+1, limit, neighbors)
-
-
-def DFS(graph, source, limit=2):
-	visited, neighbors = {}, {}
-	DFSUtil(graph, visited, source, 0, limit, neighbors)
-	return neighbors
-
-
-def jaccard_coefficient(g, a, b, cn):
-	deg_a = g.degree(a)
-	deg_b = g.degree(b)
-	return cn/(deg_a + deg_b - cn)
-
-
-def adamic_adar(g, a, b):
-	common_neighbors = [v for v in nx.common_neighbors(g, a, b)]
-	return sum([1/math.log(g.degree(v)) for v in common_neighbors])
-
-
-def resource_allocation(g, a, b):
-	common_neighbors = [v for v in nx.common_neighbors(g, a, b)]
-	return sum([1/g.degree(v) for v in common_neighbors])
-
-
-def create_matrices(similarity):
-	global Gp,Gc,Ap,Ac
-	
-	# Number of authors
-	n_authors = len(A)
-
-	# Initiliaze Ap,Ac
-	Ap, Ac = {},{}
-
-	print('Creating APA matrix..')
-	for author in tqdm(A, ncols=100):
-		Ap[author] = {}
-		author_neighbours = DFS(graph=Gp, source=author, limit=2)
-		
-		# Common Neighbour
-		if similarity == 'cn':
-			for author_,w in author_neighbours.items():
-				Ap[author][author_] = w
-
-		# Jaccard Coefficient
-		elif similarity == 'jc':
-			for author_,w in author_neighbours.items():
-				Ap[author][author_] = jaccard_coefficient(Gp, author, author_, w)
-
-		# Adamic-Adar
-		elif similarity == 'aa':
-			for author_,w in author_neighbours.items():
-				Ap[author][author_] = adamic_adar(Gp, author, author_)
-
-		# Resource Allocation
-		elif similarity == 'ra':
-			for author_,w in author_neighbours.items():
-				Ap[author][author_] = resource_allocation(Gp, author, author_)
-
-		else:
-			raise Exception('Invalid similarity measure: ', similarity)
-
-	pickle.dump(Ap, open('data/apa_' + similarity + '.pkl','wb'))
-
-	print('Creating ACA matrix..')
-	for author in tqdm(A, ncols=100):
-		Ac[author] = {}
-		author_neighbours = DFS(graph=Gc, source=author, limit=2)
-		
-		# Common Neighbour
-		if similarity == 'cn':
-			for author_,w in author_neighbours.items():
-				Ac[author][author_] = w
-
-		# Jaccard Coefficient
-		elif similarity == 'jc':
-			for author_,w in author_neighbours.items():
-				Ac[author][author_] = jaccard_coefficient(Gc, author, author_, w)
-
-		# Adamic-Adar
-		elif similarity == 'aa':
-			for author_,w in author_neighbours.items():
-				Ac[author][author_] = adamic_adar(Gc, author, author_)
-
-		# Resource Allocation
-		elif similarity == 'ra':
-			for author_,w in author_neighbours.items():
-				Ac[author][author_] = resource_allocation(Gc, author, author_)
-
-		else:
-			raise Exception('Invalid similarity measure: ', similarity)
-
-	pickle.dump(Ap, open('data/aca_' + similarity + '.pkl','wb'))
-
-
-def generate_contexts(combine):
-	Ap = pickle.load(open('data/apa.pkl','rb'))
-	Ac = pickle.load(open('data/aca.pkl','rb'))
-
-	context_file = open('data/context.txt','w')
-
+	# String to hold the entire context
 	contexts = ''
+
+	# List of authors
+	A = [author for author, author_neighbours in Ac.items()]
+	
 	print('Generating context...')
-	for author, author_neighbours in tqdm(Ac.items(), ncols=100):
+	for author in tqdm(A, ncols=100):
 		context = ''
-		for author_, w in author_neighbours.items():
-			context += (author + ' ' + author_) * 1 + ' '
+
+		if combine == 'aca':
+			author_neighbours = Ac[author]
+			
+			if similarity == 'cn':
+				for author_, w in author_neighbours.items():
+					context += (author + ' ' + author_) * w + ' '
+
+			elif similarity in ['jc', 'aa', 'ra']:
+				for author_, w in author_neighbours.items():
+					w_= math.ceil(w * SCALE)
+					context += (author + ' ' + author_) * w_ + ' '
+			else:
+				raise Exception('Invalid similarity measure: ', similarity)
+
+		elif combine == 'apa':
+			author_neighbours = Ap[author]
+
+			if similarity == 'cn':
+				for author_, w in author_neighbours.items():
+					context += (author + ' ' + author_) * w + ' '
+
+			elif similarity in ['jc', 'aa', 'ra']:
+				for author_, w in author_neighbours.items():
+					w_= math.ceil(w * SCALE)
+					context += (author + ' ' + author_) * w_ + ' '
+			else:
+				raise Exception('Invalid similarity measure: ', similarity)
+		
+		elif combine == 'sum':		
+			author_neighbours_c = Ac[author]
+			author_neighbours_p = Ap[author]
+
+			if similarity == 'cn':
+				for author_, w in author_neighbours_c.items():
+					w_ = w
+					if author_ in author_neighbours_p:
+						w_ += author_neighbours_p[author_]
+					context += (author + ' ' + author_) * w_ + ' '
+
+			elif similarity in ['jc', 'aa', 'ra']:
+				for author_, w in author_neighbours_c.items():
+					w_ = w
+					if author_ in author_neighbours_p:
+						w_ += author_neighbours_p[author_]
+					w_= math.ceil(w * SCALE)
+					context += (author + ' ' + author_) * w_ + ' '
+			else:
+				raise Exception('Invalid similarity measure: ', similarity)
+		
+		elif combine == 'alpha':		
+			author_neighbours_c = Ac[author]
+			author_neighbours_p = Ap[author]
+
+			if similarity == 'cn':
+				for author_, w in author_neighbours_c.items():
+					w_ = alpha * w
+					if author_ in author_neighbours_p:
+						w_ += (1 - alpha) * author_neighbours_p[author_]
+					w_= math.ceil(w * SCALE)
+					context += (author + ' ' + author_) * w_ + ' '
+
+			elif similarity in ['jc', 'aa', 'ra']:
+				for author_, w in author_neighbours_c.items():
+					w_ = alpha * w
+					if author_ in author_neighbours_p:
+						w_ += (1 - alpha) * author_neighbours_p[author_]
+					w_= math.ceil(w * SCALE)
+					context += (author + ' ' + author_) * w_ + ' '
+			else:
+				raise Exception('Invalid similarity measure: ', similarity)
+
+		else:
+			raise Exception('Invalid combination rule: ', combine)
+
 		contexts += context + '\n'
 
 	context_file.write(contexts)
 
 
 if __name__ == "__main__":
-	parser = argparse.ArgumentParser(description='Generate metapaths for given author-venue edge list')
-	parser.add_argument('-s','--similarity', dest='similarity', default='cn',
-			    help='Similarity measure between author nodes. Choose among cn,jc,ra,aa. (default: cn)')
+	parser = argparse.ArgumentParser(description='Generate contexts from ACA and/or ACA matrices.',
+									 formatter_class=RawTextHelpFormatter)
 	parser.add_argument('-c','--combine', dest='combine', default='aca',
-			    help='Combination of similarity scores from APA and ACA matrices. Choose among aca,apa,alpha. (default: cn)')
+			    help='Combination of similarity scores from APA and ACA matrices. Choose among aca,apa,sum,alpha. (default: aca)')
+	parser.add_argument('-s','--similarity', dest='similarity', default='cn',
+			    help='Similarity measure between author nodes. Choose among cn,jc,aa,ra. (default: cn)')
+	parser.add_argument('-a','--alpha', dest='alpha', default='0.5',
+			    help='Alpha value used in conjunction with alpha combination rule. \nsimilarity = alpha * ACA + (1 - alpha) * APA \nValue between 0 and 1. (default: 0.5)')
 
 	args = parser.parse_args()
 
-	# Create APA and ACA graphs
-	create_graphs()
-
-	# Create APA and ACA matrices
-	create_matrices(similarity=args.similarity)
-
 	# Generate contexts
-	# generate_contexts(combine=args.combine)
+	generate_contexts(combine=args.combine, similarity=args.similarity, alpha=float(args.alpha))
