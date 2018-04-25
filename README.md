@@ -84,24 +84,24 @@ optional arguments:
 
 ## Example
 
-1. Compute unweighted APA and ACA matrices using resource allocation as simlarity.
+1. Compute unweighted APA and ACA matrices using common neighbour as similarity.
 ```
-$ python3.6 matrices.py -s ra -w False
+$ python3.6 matrices.py -s cn -w False
 ```
 
 2. Generate contexts using 'sum' combination strategy.
 ``` 
-$ python3.6 context.py -c sum -s ra -w False
+$ python3.6 context.py -c sum -s cn -w False
 ```
 
 3. Generate vector embeddings for authors using the contexts generating in previous step.
 ```
-$ python3.6 embedding.py -f contexts/context_sum_ra_False.txt
+$ python3.6 embedding.py -f contexts/context_sum_cn_False.txt
 ```
 
 4. Compute cosine similarities of author nodes in test data.
 ```
-$ python3.6 compute_cs.py -f embeddings/model_sum_ra_False_1_100_5.bin
+$ python3.6 compute_cs.py -f embeddings/model_sum_cn_False_1_100_5.bin
 ```
 
-Test data with cosine similarity scores will be saved in a folder named: 'test_scores/scores_sum_ra_False_1_100_5'.
+Test data with cosine similarity scores will be saved in a folder named: 'test_scores/scores_sum_cn_False_1_100_5'.
