@@ -122,12 +122,12 @@ if __name__ == "__main__":
 			    help='Combination of similarity scores from APA and ACA matrices. Choose among aca,apa,sum,alpha. (default: aca)')
 	parser.add_argument('-s','--similarity', dest='similarity', default='cn',
 			    help='Similarity measure between author nodes. Choose among cn,jc,aa,ra. (default: cn)')
-	parser.add_argument('-w','--weighted', dest='weighted', default=False,
-			    help='Whether to have weighted similarity scores. (default: False)')
+	parser.add_argument('-w','--weighted', dest='weighted', default='False',
+			    help='Whether to have weighted similarity scores (True/False). (default: False)')
 	parser.add_argument('-a','--alpha', dest='alpha', default='0.5',
 			    help='Alpha value used in conjunction with alpha combination rule. \nsimilarity = alpha * ACA + (1 - alpha) * APA \nValue between 0 and 1. (default: 0.5)')
 
 	args = parser.parse_args()
-
+	
 	# Generate contexts
 	generate_contexts(combine=args.combine, similarity=args.similarity, weighted=args.weighted, alpha=float(args.alpha))

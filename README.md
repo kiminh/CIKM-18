@@ -18,7 +18,7 @@ optional arguments:
                         aa - Adamic-Adar 
                         ra - Resource Allocation. (default: cn)
   -w WEIGHTED, --weighted WEIGHTED
-                        Whether to have weighted similarity scores. (default: False)
+                        Whether to have weighted similarity scores (True/False). (default: False)
 ```
 
 2. Generate author contexts using ACA and APA matrices:
@@ -35,7 +35,7 @@ optional arguments:
   -s SIMILARITY, --similarity SIMILARITY
                         Similarity measure between author nodes. Choose among cn,jc,aa,ra. (default: cn)
   -w WEIGHTED, --weighted WEIGHTED
-                        Whether to have weighted similarity scores. (default: False)
+                        Whether to have weighted similarity scores (True/False). (default: False)
   -a ALPHA, --alpha ALPHA
                         Alpha value used in conjunction with alpha combination rule. 
                         similarity = alpha * ACA + (1 - alpha) * APA 

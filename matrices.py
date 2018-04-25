@@ -175,7 +175,7 @@ def create_matrices(similarity, weighted):
 		else:
 			raise Exception('Invalid similarity measure: ', similarity)
 
-	pickle.dump(Ap, open('matrices/apa_' + similarity + '_' + weighted + '.pkl','wb'))
+	pickle.dump(Ap, open('matrices/apa_' + similarity + '_' + str(weighted) + '.pkl','wb'))
 
 	print('Creating ACA matrix..')
 	for author in tqdm(A, ncols=100):
@@ -211,7 +211,7 @@ def create_matrices(similarity, weighted):
 		else:
 			raise Exception('Invalid similarity measure: ', similarity)
 
-	pickle.dump(Ap, open('matrices/aca_' + similarity + '_' + weighted + '.pkl','wb'))
+	pickle.dump(Ap, open('matrices/aca_' + similarity + '_' + str(weighted) + '.pkl','wb'))
 
 
 
@@ -221,12 +221,12 @@ if __name__ == "__main__":
 	parser.add_argument('-s','--similarity', dest='similarity', default='cn',
 			    help='Similarity measure between author nodes. Choose among following: \ncn - Common neighbour \njc - Jaccard Coefficient \naa - Adamic-Adar \nra - Resource Allocation. (default: cn)')
 	parser.add_argument('-w','--weighted', dest='weighted', default=False,
-			    help='Whether to have weighted similarity scores. (default: False)')
+			    help='Whether to have weighted similarity scores (True/False). (default: False)')
 	
 	args = parser.parse_args()
-
+	
 	# Create APA and ACA graphs
 	create_graphs()
 
 	# Create APA and ACA matrices
-	create_matrices(similarity=args.similarity, weighted=bool(args.weighted))
+	create_matrices(similarity=args.similarity, weighted=args.weighted)
